@@ -96,9 +96,9 @@ class DictHandler(Handler, origin=Dict):
         super().__init__(name, bound)
         k, v = self.args
         self.key_handler = Handler(
-            lambda *args: 'key of {}'.format(self.name(*args)), k)
+            lambda *args: 'dict key of {}'.format(self.name(*args)), k)
         self.value_handler = Handler(
-            lambda k, *args: 'value at {!r} of {}'.format(k, self.name(*args)), v)
+            lambda k, *args: 'dict value at {!r} of {}'.format(k, self.name(*args)), v)
 
     def __call__(self, value, *args) -> None:
         self.check_type(value, dict, *args)
@@ -114,7 +114,7 @@ class ListHandler(Handler, origin=List):
     def __init__(self, name: NameType, bound) -> None:
         super().__init__(name, bound)
         self.item_handler = Handler(lambda i, *args:
-                                    'item #{} of {}'.format(i, self.name(*args)), self.args[0])
+                                    'list item #{} of {}'.format(i, self.name(*args)), self.args[0])
 
     def __call__(self, value, *args) -> None:
         self.check_type(value, list, *args)
