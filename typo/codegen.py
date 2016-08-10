@@ -30,7 +30,7 @@ class Codegen:
     @staticmethod
     def rt_type_fail(desc: str, expected: str, var: Any, **kwargs):
         desc = desc.format(**kwargs)
-        raise TypeError('wrong type for {}: expected {}, got {}'
+        raise TypeError('invalid {}: expected {}, got {}'
                         .format(desc, expected, type_name(type(var))))
 
     def write_line(self, line):
