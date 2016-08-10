@@ -2,7 +2,7 @@
 
 import abc
 
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional, Callable
 
 from typo.codegen import Codegen
 from typo.utils import type_name
@@ -59,6 +59,14 @@ class Handler(metaclass=HandlerMeta):
         if hasattr(self.bound, '__args__'):
             return self.bound.__args__
         return self.bound.__parameters__
+
+    def compile(self) -> Callable[[Any], None]:
+        gen = Codegen()
+        var = gen.new_var()
+        gen.write_line('def check({}):'.format(var))
+        with gen.indent():
+            self(gen, var, 'input')
+        return gen.compile('check')
 
 
 class AnyHandler(Handler):
