@@ -29,7 +29,13 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ),
-    keywords='typing type checking annotations'
+    keywords='typing type checking annotations',
+    extras_require={
+        ':python_version == "3.3"': 'typing >= 3.5',
+        ':python_version == "3.4"': 'typing >= 3.5'
+    }
 )
