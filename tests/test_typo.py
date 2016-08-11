@@ -2,7 +2,7 @@
 
 import pytest
 
-from typing import Any, List
+from typing import Any, List, Tuple
 
 
 pytest.add_handler_test(
@@ -44,4 +44,13 @@ pytest.add_handler_test(
     'test_list_no_typevar', List, 'list',
     [[], [1, 'foo']],
     [(1, 'expected list, got int')]
+)
+
+pytest.add_handler_test(
+    'test_tuple_no_ellipsis', Tuple[int, str], 'Tuple[int, str]',
+    [(1, 'foo')],
+    [(42, 'expected tuple, got int'),
+     ((1, 2, 3), 'expected tuple of length 2, got tuple of length 3'),
+     (('foo', 'bar'), 'invalid item #0.*expected int, got str'),
+     ((1, 2), 'invalid item #1.*expected str, got int')]
 )
