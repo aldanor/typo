@@ -39,3 +39,9 @@ pytest.add_handler_test(
      ([[], 1, []], 'invalid item #1.*expected list, got int'),
      ([[], [1, 2, [], 4]], 'invalid item #2 of item #1.*expected int, got list')]
 )
+
+pytest.add_handler_test(
+    'test_list_no_typevar', List, 'list',
+    [[], [1, 'foo']],
+    [(1, 'expected list, got int')]
+)

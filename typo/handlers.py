@@ -26,6 +26,10 @@ class HandlerMeta(abc.ABCMeta):
     def __call__(cls, bound: Any) -> None:
         origin = getattr(bound, '__origin__', None)
 
+        bound = {
+            List: list
+        }.get(bound, bound)
+
         if bound is Any:
             tp = AnyHandler
         elif origin in cls.origin_handlers:
