@@ -189,6 +189,13 @@ class TupleHandler(Handler, subclass=Tuple):
                 self.item_handler(gen, var_v, None if desc is None else
                                   'item #{{{}}} of {}'.format(var_i, desc))
         else:
+            n = len(self.item_handlers)
+            var_n = gen.new_var()
+            gen.write_line('{} = len({})'.format(var_n, varname))
+            gen.write_line('if {} != {}:'.format(var_n, n))
+            with gen.indent():
+                gen.fail(desc, 'tuple of length {}'.format(n), varname,
+                         got='tuple of length {{{}}}'.format(var_n))
             for i, item_handler in enumerate(self.item_handlers):
                 item_handler(gen, '{}[{}]'.format(varname, i),
                              None if desc is None else 'item #{} of {}'.format(i, desc))
