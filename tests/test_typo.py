@@ -31,3 +31,11 @@ pytest.add_handler_test(
     [(1, 'expected list, got int'),
      ([1, 'foo', 2], 'invalid item #1.*expected int, got str')]
 )
+
+pytest.add_handler_test(
+    'test_list_nested', List[List[int]], 'List[List[int]]',
+    [[], [[]], [[], []], [[1, 2], [], [3]]],
+    [(1, 'expected list, got int'),
+     ([[], 1, []], 'invalid item #1.*expected list, got int'),
+     ([[], [1, 2, [], 4]], 'invalid item #2 of item #1.*expected int, got list')]
+)
