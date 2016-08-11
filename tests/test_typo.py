@@ -2,9 +2,9 @@
 
 import pytest
 
-from typing import Any
+from typing import Any, List
 
-from typo.handlers import AnyHandler, TypeHandler
+from typo.handlers import AnyHandler, TypeHandler, ListHandler
 
 
 pytest.check_handler(
@@ -25,4 +25,11 @@ pytest.check_handler(
     [A()],
     [(A, 'expected test_typo.A, got type'),
      (42, 'expected test_typo.A, got int')]
+)
+
+pytest.check_handler(
+    'test_list_basic', List[int], ListHandler, 'List[int]',
+    [[], [1], [1, 2, 3]],
+    [(1, 'expected list, got int'),
+     ([1, 'foo', 2], 'invalid item #1.*expected int, got str')]
 )
