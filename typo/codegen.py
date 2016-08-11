@@ -19,6 +19,7 @@ class Codegen:
         self.context = {
             'collections': collections,
             'typing': typing,
+            'rt_fail': self.rt_fail,
             'rt_type_fail': self.rt_type_fail
         }
 
@@ -28,10 +29,14 @@ class Codegen:
         return context[name]
 
     @staticmethod
-    def rt_type_fail(desc: str, expected: str, var: Any, **kwargs):
-        desc = desc.format(**kwargs)
+    def rt_fail(desc: str, expected: str, var: Any, got: str, **kwargs):
         raise TypeError('invalid {}: expected {}, got {}'
-                        .format(desc, expected, type_name(type(var))))
+                        .format(desc.format(**kwargs), expected, got.format(**kwargs)))
+
+    @staticmethod
+    def rt_type_fail(desc: str, expected: str, var: Any, **kwargs):
+        raise TypeError('invalid {}: expected {}, got {}'
+                        .format(desc.format(**kwargs), expected, type_name(type(var))))
 
     def write_line(self, line):
         self.lines.append(' ' * self.indent_level * 4 + line)
@@ -61,12 +66,15 @@ class Codegen:
             self.context[varname] = tp
         return self.types[tp]
 
-    def type_fail(self, desc: str, expected: str, varname: str):
+    def fail(self, desc: str, expected: str, varname: str, got: str=None):
         if desc is None:
             self.write_line('raise TypeError')
-        else:
+        elif got is None:
             self.write_line('rt_type_fail("{}", "{}", {}, **locals())'
                             .format(desc, expected, varname))
+        else:
+            self.write_line('rt_fail("{}", "{}", {}, "{}", **locals())'
+                            .format(desc, expected, varname, got))
 
     def if_not_isinstance(self, varname, tp):
         if isinstance(tp, tuple):
@@ -90,7 +98,7 @@ class Codegen:
 
         self.if_not_isinstance(varname, tp)
         with self.indent():
-            self.type_fail(desc, expected, varname)
+            self.fail(desc, expected, varname)
 
     def __str__(self):
         return '\n'.join(self.lines) + '\n'

@@ -163,7 +163,7 @@ class UnionHandler(Handler, subclass=Union):
             expected = '{} or {}'.format(
                 ', '.join(map(str, self.all_handlers[:-1])), self.all_handlers[-1])
             with gen.indent():
-                gen.type_fail(desc, expected, varname)
+                gen.fail(desc, expected, varname)
 
     def __str__(self) -> str:
         return 'Union[{}]'.format(', '.join(map(str, self.all__handlers)))
