@@ -4,31 +4,29 @@ import pytest
 
 from typing import Any, List
 
-from typo.handlers import AnyHandler, TypeHandler, ListHandler
 
-
-pytest.check_handler(
-    'test_any', Any, AnyHandler, 'Any',
+pytest.add_handler_test(
+    'test_any', Any, 'Any',
     [None, (1, '2', {})]
 )
 
-pytest.check_handler(
-    'test_builtin_type', int, TypeHandler, 'int',
+pytest.add_handler_test(
+    'test_builtin_type', int, 'int',
     [42],
     [('foo', 'expected int, got str')]
 )
 
 A = type('A', (), {})
 
-pytest.check_handler(
-    'test_user_type', A, TypeHandler, 'test_typo.A',
+pytest.add_handler_test(
+    'test_user_type', A, 'test_typo.A',
     [A()],
     [(A, 'expected test_typo.A, got type'),
      (42, 'expected test_typo.A, got int')]
 )
 
-pytest.check_handler(
-    'test_list_basic', List[int], ListHandler, 'List[int]',
+pytest.add_handler_test(
+    'test_list_basic', List[int], 'List[int]',
     [[], [1], [1, 2, 3]],
     [(1, 'expected list, got int'),
      ([1, 'foo', 2], 'invalid item #1.*expected int, got str')]
