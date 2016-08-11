@@ -194,6 +194,6 @@ class TupleHandler(Handler, subclass=Tuple):
                              None if desc is None else 'item #{} of {}'.format(i, desc))
 
     def __str__(self) -> str:
-        if self.fixed:
-            return 'Tuple[{}]'.format(', '.join(map(str, self.item_handlers)))
-        return 'Tuple[{}, ...]'.format(self.item_handler)
+        if self.ellipsis:
+            return 'Tuple[{}, ...]'.format(self.item_handler)
+        return 'Tuple[{}]'.format(', '.join(map(str, self.item_handlers)))
