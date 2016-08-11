@@ -35,5 +35,3 @@ def check_handler(name, bound, exp_type, exp_str, ok=[], fail=[]):
             pytest.raises_regexp(TypeError, msg, c, arg)
 
     inspect.stack()[1][0].f_locals[name] = func
-    # print(list(inspect.stack()[1][0].f_locals))
-    # globals()[name] = func
