@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import abc
+import collections
 
-from typing import Any, Dict, List, Tuple, Union, Optional, Callable
+from typing import Any, Dict, List, Tuple, Union, Optional, Callable, Sequence
 
 from typo.codegen import Codegen
 from typo.utils import type_name
@@ -37,6 +38,8 @@ class HandlerMeta(abc.ABCMeta):
             Dict[Any, object]: dict,
             Dict[object, Any]: dict,
             Dict[object, object]: dict,
+            Sequence: Sequence[Any],
+            collections.Sequence: Sequence[Any],
         }.get(bound, bound)
 
         origin = getattr(bound, '__origin__', None)
@@ -83,6 +86,10 @@ class Handler(metaclass=HandlerMeta):
             self(gen, var, 'input')
         return gen.compile('check')
 
+    @property
+    def is_any(self):
+        return False
+
 
 class AnyHandler(Handler):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
@@ -90,6 +97,10 @@ class AnyHandler(Handler):
 
     def __str__(self) -> str:
         return 'Any'
+
+    @property
+    def is_any(self):
+        return True
 
 
 class TypeHandler(Handler):
@@ -215,3 +226,26 @@ class TupleHandler(Handler, subclass=Tuple):
         if self.ellipsis:
             return 'Tuple[{}, ...]'.format(self.item_handler)
         return 'Tuple[{}]'.format(', '.join(map(str, self.item_handlers)))
+
+
+class SequenceHandler(Handler, origin=Sequence):
+    def __init__(self, bound: Any) -> None:
+        super().__init__(bound)
+        self.item_handler = Handler(self.args[0])
+
+    def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
+        gen.if_not_hasattrs(varname, '__iter__', '__getitem__', '__len__', '__contains__')
+        with gen.indent():
+            gen.fail(desc, 'sequence', varname)
+        if not self.item_handler.is_any:
+            var_i, var_v = gen.new_var(), gen.new_var()
+            gen.write_line('for {}, {} in enumerate({}):'
+                           .format(var_i, var_v, varname))
+            with gen.indent():
+                self.item_handler(gen, var_v, None if desc is None else
+                                  'item #{{{}}} of {}'.format(var_i, desc))
+
+    def __str__(self) -> str:
+        if self.item_handler.is_any:
+            return 'Sequence'
+        return 'Sequence[{}]'.format(self.item_handler)

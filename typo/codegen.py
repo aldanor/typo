@@ -87,6 +87,10 @@ class Codegen:
 
         self.write_line('if not isinstance({}, {}):'.format(varname, tp))
 
+    def if_not_hasattrs(self, varname, *attrs):
+        conds = ['not hasattr({}, "{}")'.format(varname, attr) for attr in attrs]
+        self.write_line('if {}:'.format(' or '.join(conds)))
+
     def check_type(self, varname: str, desc: str, tp: Union[Tuple[type, ...], type]):
         if isinstance(tp, tuple):
             if len(tp) == 1:

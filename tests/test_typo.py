@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import collections
 import pytest
 
-from typing import Any, List, Tuple, Dict
+from typing import Any, List, Tuple, Dict, Sequence
 
 
 pytest.add_handler_test(
@@ -90,4 +91,29 @@ pytest.add_handler_test(
                              Dict[object, Any], Dict[object, object]), 'dict',
     [{}, {1: 'foo', 'bar': 2}],
     [(42, 'expected dict, got int')]
+)
+
+
+class MySequence(collections.Sequence):
+    def __len__(self):
+        return 2
+
+    def __getitem__(self, k):
+        if k > 2:
+            raise IndexError
+        return k + 42
+
+
+pytest.add_handler_test(
+    'test_sequence', Sequence[int], 'Sequence[int]',
+    [[], [1, 2], MySequence()],
+    [(42, 'expected sequence, got int'),
+     ([1, '2'], 'invalid item #1.*expected int, got str')]
+)
+
+pytest.add_handler_test(
+    'test_sequence_no_typevar', (Sequence, collections.Sequence,
+                                 Sequence[object], Sequence[Any]), 'Sequence',
+    [[], [1, 'foo'], MySequence()],
+    [(42, 'expected sequence, got int')]
 )
