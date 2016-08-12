@@ -138,11 +138,7 @@ class ListHandler(Handler, origin=List):
 
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, list)
-        var_i, var_v = gen.new_var(), gen.new_var()
-        gen.write_line('for {}, {} in enumerate({}):'.format(var_i, var_v, varname))
-        with gen.indent():
-            self.item_handler(gen, var_v, None if desc is None else
-                              'item #{{{}}} of {}'.format(var_i, desc))
+        gen.enumerate_and_check(varname, desc, self.item_handler)
 
     def __str__(self) -> str:
         return 'List[{}]'.format(self.item_handler)
@@ -204,12 +200,7 @@ class TupleHandler(Handler, subclass=Tuple):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, tuple)
         if self.ellipsis:
-            var_i, var_v = gen.new_var(), gen.new_var()
-            gen.write_line('for {}, {} in enumerate({}):'
-                           .format(var_i, var_v, varname))
-            with gen.indent():
-                self.item_handler(gen, var_v, None if desc is None else
-                                  'item #{{{}}} of {}'.format(var_i, desc))
+            gen.enumerate_and_check(varname, desc, self.item_handler)
         else:
             n = len(self.item_handlers)
             var_n = gen.new_var()
@@ -250,12 +241,7 @@ class SequenceHandler(Handler, origin=Sequence):
         with gen.indent():
             gen.fail(desc, 'sequence', varname)
         if not self.item_handler.is_any:
-            var_i, var_v = gen.new_var(), gen.new_var()
-            gen.write_line('for {}, {} in enumerate({}):'
-                           .format(var_i, var_v, varname))
-            with gen.indent():
-                self.item_handler(gen, var_v, None if desc is None else
-                                  'item #{{{}}} of {}'.format(var_i, desc))
+            gen.enumerate_and_check(varname, desc, self.item_handler)
 
     def __str__(self) -> str:
         if self.item_handler.is_any:

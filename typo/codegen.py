@@ -79,7 +79,7 @@ class Codegen:
             self.write_line('rt_fail("{}", "{}", {}, "{}", **locals())'
                             .format(desc, expected, varname, got))
 
-    def if_not_isinstance(self, varname, tp):
+    def if_not_isinstance(self, varname: str, tp: Union[type, Tuple[type, ...]]) -> None:
         if isinstance(tp, tuple):
             if len(tp) == 1:
                 tp = self.ref_type(tp[0])
@@ -90,7 +90,7 @@ class Codegen:
 
         self.write_line('if not isinstance({}, {}):'.format(varname, tp))
 
-    def check_attrs(self, varname, result, *attrs):
+    def check_attrs(self, varname: str, result: str, *attrs: str) -> None:
         conds = ['hasattr({}, "{}")'.format(varname, attr) for attr in attrs]
         self.write_line('{} = {}'.format(result, ' and '.join(conds)))
 
@@ -106,6 +106,14 @@ class Codegen:
         self.if_not_isinstance(varname, tp)
         with self.indent():
             self.fail(desc, expected, varname)
+
+    def enumerate_and_check(self, varname: str, desc: str,
+                            handler: 'typo.handlers.Handler') -> None:
+        var_i, var_v = self.new_var(), self.new_var()
+        self.write_line('for {}, {} in enumerate({}):'.format(var_i, var_v, varname))
+        with self.indent():
+            handler(self, var_v, None if desc is None else
+                    'item #{{{}}} of {}'.format(var_i, desc))
 
     def __str__(self):
         return '\n'.join(self.lines) + '\n'
