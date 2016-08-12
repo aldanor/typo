@@ -24,12 +24,12 @@ class HandlerMeta(abc.ABCMeta):
         super().__init__(name, bases, ns)
 
     def __call__(cls, bound: Any) -> None:
-        origin = getattr(bound, '__origin__', None)
-
         bound = {
             List: list,
             Tuple: tuple
         }.get(bound, bound)
+
+        origin = getattr(bound, '__origin__', None)
 
         if bound is Any:
             tp = AnyHandler
