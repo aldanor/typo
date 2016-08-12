@@ -11,25 +11,28 @@ def pytest_namespace():
 def add_handler_test(name, bound, exp_str, ok=[], fail=[]):
     from typo.handlers import Handler
 
-    h = Handler(bound)
-    c = h.compile()
+    handlers, params, ids = [], [], []
+    for n, b in enumerate(bound if isinstance(bound, tuple) else [bound]):
+        h = Handler(b)
+        handlers.append((h, h.compile()))
 
-    params = [('str', None)]
-    params += [('ok', arg) for arg in ok]
-    params += [('fail', arg) for arg in fail]
+        params = [('str', n, None)]
+        params += [('ok', n, arg) for arg in ok]
+        params += [('fail', n, arg) for arg in fail]
 
-    ids = ['str']
-    ids += ['ok{}'.format(i) for i in range(len(ok))]
-    ids += ['fail{}'.format(i) for i in range(len(fail))]
+        ids = ['str-{}'.format(n)]
+        ids += ['ok-{}-{}'.format(n, i) for i in range(len(ok))]
+        ids += ['fail-{}-{}'.format(n, i) for i in range(len(fail))]
 
-    @pytest.mark.parametrize('test, arg', params, ids=ids)
-    def func(test, arg):
+    @pytest.mark.parametrize('test, n, arg', params, ids=ids)
+    def func(test, n, arg):
+        h, f = handlers[n]
         if test == 'str':
             assert str(h) == exp_str
         elif test == 'ok':
-            c(arg)
+            f(arg)
         elif test == 'fail':
             arg, msg = arg
-            pytest.raises_regexp(TypeError, msg, c, arg)
+            pytest.raises_regexp(TypeError, msg, f, arg)
 
     inspect.stack()[1][0].f_locals[name] = func
