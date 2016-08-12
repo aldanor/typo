@@ -4,7 +4,7 @@ import collections
 import contextlib
 import typing
 
-from typing import Any, Union, Tuple
+from typing import Any, Union, Tuple, List
 
 from typo.utils import type_name
 
@@ -90,10 +90,6 @@ class Codegen:
 
         self.write_line('if not isinstance({}, {}):'.format(varname, tp))
 
-    def check_attrs(self, varname: str, result: str, *attrs: str) -> None:
-        conds = ['hasattr({}, "{}")'.format(varname, attr) for attr in attrs]
-        self.write_line('{} = {}'.format(result, ' and '.join(conds)))
-
     def check_type(self, varname: str, desc: str, tp: Union[Tuple[type, ...], type]):
         if isinstance(tp, tuple):
             if len(tp) == 1:
@@ -114,6 +110,23 @@ class Codegen:
         with self.indent():
             handler(self, var_v, None if desc is None else
                     'item #{{{}}} of {}'.format(var_i, desc))
+
+    def check_attrs_cached(self, varname: str, desc: str, expected: str,
+                           cache: str, attrs: List[str]) -> None:
+        var_t = self.new_var()
+        self.write_line('{} = type({})'.format(var_t, varname))
+        self.write_line('if {} in {}:'.format(var_t, cache))
+        var_a = self.new_var()
+        with self.indent():
+            self.write_line('{} = {}[{}]'.format(var_a, cache, var_t))
+        self.write_line('else:')
+        with self.indent():
+            conds = ['hasattr({}, "{}")'.format(varname, attr) for attr in attrs]
+            self.write_line('{} = {}'.format(var_a, ' and '.join(conds)))
+            self.write_line('{}[{}] = {}'.format(cache, var_t, var_a))
+        self.write_line('if not {}:'.format(var_a))
+        with self.indent():
+            self.fail(desc, expected, varname)
 
     def __str__(self):
         return '\n'.join(self.lines) + '\n'

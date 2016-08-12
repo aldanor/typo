@@ -225,21 +225,8 @@ class SequenceHandler(Handler, origin=Sequence):
         self.item_handler = Handler(self.args[0])
 
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
-        var_t = gen.new_var()
-        gen.write_line('{} = type({})'.format(var_t, varname))
-        gen.write_line('if {} in v_cache_seq:'.format(var_t))
-        var_a = gen.new_var()
-        with gen.indent():
-            gen.write_line('{} = v_cache_seq[{}]'.format(var_a, var_t))
-        gen.write_line('else:')
-        with gen.indent():
-            gen.check_attrs(varname, var_a,
-                            '__iter__', '__getitem__', '__len__',
-                            '__contains__', '__reversed__', 'index', 'count')
-            gen.write_line('v_cache_seq[{}] = {}'.format(var_t, var_a))
-        gen.write_line('if not {}:'.format(var_a))
-        with gen.indent():
-            gen.fail(desc, 'sequence', varname)
+        gen.check_attrs_cached(varname, desc, 'sequence', 'v_cache_seq',
+                               ['__iter__', '__getitem__', '__len__', '__contains__'])
         if not self.item_handler.is_any:
             gen.enumerate_and_check(varname, desc, self.item_handler)
 
