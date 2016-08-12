@@ -54,3 +54,9 @@ pytest.add_handler_test(
      (('foo', 'bar'), 'invalid item #0.*expected int, got str'),
      ((1, 2), 'invalid item #1.*expected str, got int')]
 )
+
+pytest.add_handler_test(
+    'test_tuple_no_typevar', Tuple, 'tuple',
+    [(), (1, 'foo')],
+    [(1, 'expected tuple, got int')]
+)

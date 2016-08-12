@@ -27,7 +27,8 @@ class HandlerMeta(abc.ABCMeta):
         origin = getattr(bound, '__origin__', None)
 
         bound = {
-            List: list
+            List: list,
+            Tuple: tuple
         }.get(bound, bound)
 
         if bound is Any:
