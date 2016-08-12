@@ -10,6 +10,8 @@ from typo.utils import type_name
 
 
 class Codegen:
+    v_cache_seq = {}
+
     def __init__(self):
         self.lines = []
         self.indent_level = 0
@@ -20,7 +22,8 @@ class Codegen:
             'collections': collections,
             'typing': typing,
             'rt_fail': self.rt_fail,
-            'rt_type_fail': self.rt_type_fail
+            'rt_type_fail': self.rt_type_fail,
+            'v_cache_seq': self.v_cache_seq
         }
 
     def compile(self, name):
@@ -87,9 +90,9 @@ class Codegen:
 
         self.write_line('if not isinstance({}, {}):'.format(varname, tp))
 
-    def if_not_hasattrs(self, varname, *attrs):
-        conds = ['not hasattr({}, "{}")'.format(varname, attr) for attr in attrs]
-        self.write_line('if {}:'.format(' or '.join(conds)))
+    def check_attrs(self, varname, result, *attrs):
+        conds = ['hasattr({}, "{}")'.format(varname, attr) for attr in attrs]
+        self.write_line('{} = {}'.format(result, ' and '.join(conds)))
 
     def check_type(self, varname: str, desc: str, tp: Union[Tuple[type, ...], type]):
         if isinstance(tp, tuple):
