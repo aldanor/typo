@@ -2,7 +2,7 @@
 
 import pytest
 
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Dict
 
 
 pytest.add_handler_test(
@@ -66,4 +66,12 @@ pytest.add_handler_test(
     'test_tuple_no_typevar', (Tuple, Tuple[Any, ...], Tuple[object, ...]), 'tuple',
     [(), (1, 'foo')],
     [(1, 'expected tuple, got int')]
+)
+
+pytest.add_handler_test(
+    'test_dict_basic', Dict[int, str], 'Dict[int, str]',
+    [{}, {1: 'foo', 2: 'bar'}],
+    [(42, 'expected dict, got int'),
+     ({1: 'foo', 2: 3}, 'invalid value at 2 of.*expected str, got int'),
+     ({1: 'foo', 'bar': 'baz'}, 'invalid key of.*expected int, got str')]
 )
