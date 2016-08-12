@@ -6,7 +6,7 @@ from typing import Any, List, Tuple
 
 
 pytest.add_handler_test(
-    'test_any', Any, 'Any',
+    'test_any', (Any, object), 'Any',
     [None, (1, '2', {})]
 )
 

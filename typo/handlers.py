@@ -25,6 +25,7 @@ class HandlerMeta(abc.ABCMeta):
 
     def __call__(cls, bound: Any) -> None:
         bound = {
+            object: Any,
             List: list,
             Tuple: tuple
         }.get(bound, bound)
