@@ -77,6 +77,15 @@ pytest.add_handler_test(
 )
 
 pytest.add_handler_test(
+    'test_dict_complex', Dict[Tuple[object, int], List[Dict[Any, str]]],
+    'Dict[Tuple[Any, int], List[Dict[Any, str]]]',
+    [{}, {('foo', 1): [{2: 'bar'}]}],
+    [({('foo', 'bar'): []}, 'invalid item #1 of key of.*expected int, got str'),
+     ({(1, 1): [{3: 'bar', 'baz': 2}]},
+      r'invalid value at \'baz\' of item #0 of value at \(1, 1\) of.*expected str, got int')]
+)
+
+pytest.add_handler_test(
     'test_dict_no_typevar', (Dict, Dict[Any, Any], Dict[Any, object],
                              Dict[object, Any], Dict[object, object]), 'dict',
     [{}, {1: 'foo', 'bar': 2}],
