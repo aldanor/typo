@@ -16,11 +16,11 @@ def add_handler_test(name, bound, exp_str, ok=[], fail=[]):
         h = Handler(b)
         handlers.append((h, h.compile()))
 
-        params = [('str', n, None)]
+        params += [('str', n, None)]
         params += [('ok', n, arg) for arg in ok]
         params += [('fail', n, arg) for arg in fail]
 
-        ids = ['str-{}'.format(n)]
+        ids += ['str-{}'.format(n)]
         ids += ['ok-{}-{}'.format(n, i) for i in range(len(ok))]
         ids += ['fail-{}-{}'.format(n, i) for i in range(len(fail))]
 
