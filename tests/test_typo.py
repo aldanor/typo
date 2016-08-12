@@ -56,6 +56,13 @@ pytest.add_handler_test(
 )
 
 pytest.add_handler_test(
+    'test_tuple_ellipsis', Tuple[int, ...], 'Tuple[int, ...]',
+    [(), (1,), (1, 2, 3)],
+    [(42, 'expected tuple, got int'),
+     ((1, 'foo'), 'invalid item #1.*expected int, got str')]
+)
+
+pytest.add_handler_test(
     'test_tuple_no_typevar', Tuple, 'tuple',
     [(), (1, 'foo')],
     [(1, 'expected tuple, got int')]

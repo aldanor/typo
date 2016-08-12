@@ -185,7 +185,7 @@ class TupleHandler(Handler, subclass=Tuple):
         if self.ellipsis:
             var_i, var_v = gen.new_var(), gen.new_var()
             gen.write_line('for {}, {} in enumerate({}):'
-                           .format(varname, var_i, var_v))
+                           .format(var_i, var_v, varname))
             with gen.indent():
                 self.item_handler(gen, var_v, None if desc is None else
                                   'item #{{{}}} of {}'.format(var_i, desc))
