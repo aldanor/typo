@@ -3,7 +3,9 @@
 import abc
 import collections
 
-from typing import Any, Dict, List, Tuple, Union, Optional, Callable, Sequence
+from typing import (
+    Any, Dict, List, Tuple, Union, Optional, Callable, Sequence, MutableSequence
+)
 
 from typo.codegen import Codegen
 from typo.utils import type_name
@@ -40,6 +42,8 @@ class HandlerMeta(abc.ABCMeta):
             Dict[object, object]: dict,
             Sequence: Sequence[Any],
             collections.Sequence: Sequence[Any],
+            MutableSequence: MutableSequence[Any],
+            collections.MutableSequence: MutableSequence[Any]
         }.get(bound, bound)
 
         origin = getattr(bound, '__origin__', None)
@@ -234,3 +238,21 @@ class SequenceHandler(Handler, origin=Sequence):
         if self.item_handler.is_any:
             return 'Sequence'
         return 'Sequence[{}]'.format(self.item_handler)
+
+
+class MutableSequenceHandler(Handler, origin=MutableSequence):
+    def __init__(self, bound: Any) -> None:
+        super().__init__(bound)
+        self.item_handler = Handler(self.args[0])
+
+    def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
+        gen.check_attrs_cached(varname, desc, 'mutable sequence', 'v_cache_mut_seq',
+                               ['__iter__', '__getitem__', '__len__', '__contains__',
+                                '__setitem__', '__delitem__'])
+        if not self.item_handler.is_any:
+            gen.enumerate_and_check(varname, desc, self.item_handler)
+
+    def __str__(self) -> str:
+        if self.item_handler.is_any:
+            return 'MutableSequence'
+        return 'MutableSequence[{}]'.format(self.item_handler)

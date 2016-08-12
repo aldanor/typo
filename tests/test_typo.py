@@ -3,7 +3,7 @@
 import collections
 import pytest
 
-from typing import Any, List, Tuple, Dict, Sequence
+from typing import Any, List, Tuple, Dict, Sequence, MutableSequence
 
 
 pytest.add_handler_test(
@@ -99,21 +99,47 @@ class MySequence(collections.Sequence):
         return 2
 
     def __getitem__(self, k):
-        if k > 2:
-            raise IndexError
-        return k + 42
+        return [0, 1][k]
 
+
+class MyMutableSequence(MySequence, collections.MutableSequence):
+    def __setitem__(self, k):
+        pass
+
+    def __delitem__(self, k):
+        pass
+
+    def insert(self, k, v):
+        pass
 
 pytest.add_handler_test(
     'test_sequence', Sequence[int], 'Sequence[int]',
-    [[], [1, 2], MySequence()],
+    [[], [1, 2], MySequence(), MyMutableSequence()],
     [(42, 'expected sequence, got int'),
      ([1, '2'], 'invalid item #1.*expected int, got str')]
 )
 
 pytest.add_handler_test(
     'test_sequence_no_typevar', (Sequence, collections.Sequence,
-                                 Sequence[object], Sequence[Any]), 'Sequence',
-    [[], [1, 'foo'], MySequence()],
+                                 Sequence[object], Sequence[Any]),
+    'Sequence',
+    [[], [1, 'foo'], MySequence(), MyMutableSequence()],
     [(42, 'expected sequence, got int')]
+)
+
+pytest.add_handler_test(
+    'test_mutable_sequence', MutableSequence[int], 'MutableSequence[int]',
+    [[], [1, 2], MyMutableSequence()],
+    [(42, 'expected mutable sequence, got int'),
+     (MySequence(), 'expected mutable sequence, got test_typo.MySequence'),
+     ([1, '2'], 'invalid item #1.*expected int, got str')]
+)
+
+pytest.add_handler_test(
+    'test_sequence_no_typevar', (MutableSequence, collections.MutableSequence,
+                                 MutableSequence[object], MutableSequence[Any]),
+    'MutableSequence',
+    [[], [1, 'foo'], MyMutableSequence()],
+    [(42, 'expected mutable sequence, got int'),
+     (MySequence(), 'expected mutable sequence, got test_typo.MySequence')]
 )

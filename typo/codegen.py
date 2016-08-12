@@ -10,7 +10,8 @@ from typo.utils import type_name
 
 
 class Codegen:
-    v_cache_seq = {list: True, tuple: True, str: True, bytes: True}
+    _v_cache_seq = {list: True, tuple: True, str: True, bytes: True}
+    _v_cache_mut_seq = {list: True}
 
     def __init__(self):
         self.lines = []
@@ -23,7 +24,8 @@ class Codegen:
             'typing': typing,
             'rt_fail': self.rt_fail,
             'rt_type_fail': self.rt_type_fail,
-            'v_cache_seq': self.v_cache_seq
+            'v_cache_seq': self._v_cache_seq,
+            'v_cache_mut_seq': self._v_cache_mut_seq
         }
 
     def compile(self, name):
