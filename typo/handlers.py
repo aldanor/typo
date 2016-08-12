@@ -31,7 +31,12 @@ class HandlerMeta(abc.ABCMeta):
             List[object]: list,
             Tuple: tuple,
             Tuple[Any, ...]: tuple,
-            Tuple[object, ...]: tuple
+            Tuple[object, ...]: tuple,
+            Dict: dict,
+            Dict[Any, Any]: dict,
+            Dict[Any, object]: dict,
+            Dict[object, Any]: dict,
+            Dict[object, object]: dict,
         }.get(bound, bound)
 
         origin = getattr(bound, '__origin__', None)

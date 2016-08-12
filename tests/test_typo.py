@@ -75,3 +75,10 @@ pytest.add_handler_test(
      ({1: 'foo', 2: 3}, 'invalid value at 2 of.*expected str, got int'),
      ({1: 'foo', 'bar': 'baz'}, 'invalid key of.*expected int, got str')]
 )
+
+pytest.add_handler_test(
+    'test_dict_no_typevar', (Dict, Dict[Any, Any], Dict[Any, object],
+                             Dict[object, Any], Dict[object, object]), 'dict',
+    [{}, {1: 'foo', 'bar': 2}],
+    [(42, 'expected dict, got int')]
+)
