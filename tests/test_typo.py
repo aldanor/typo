@@ -41,7 +41,7 @@ pytest.add_handler_test(
 )
 
 pytest.add_handler_test(
-    'test_list_no_typevar', List, 'list',
+    'test_list_no_typevar', (List, List[Any], List[object]), 'list',
     [[], [1, 'foo']],
     [(1, 'expected list, got int')]
 )
@@ -63,7 +63,7 @@ pytest.add_handler_test(
 )
 
 pytest.add_handler_test(
-    'test_tuple_no_typevar', Tuple, 'tuple',
+    'test_tuple_no_typevar', (Tuple, Tuple[Any, ...], Tuple[object, ...]), 'tuple',
     [(), (1, 'foo')],
     [(1, 'expected tuple, got int')]
 )
