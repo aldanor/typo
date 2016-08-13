@@ -28,33 +28,20 @@ class HandlerMeta(abc.ABCMeta):
 
     def __call__(cls, bound: Any) -> None:
         bound = {
-            object: Any,
-            List: list,
-            List[Any]: list,
-            List[object]: list,
-            Tuple: tuple,
-            Tuple[Any, ...]: tuple,
-            Tuple[object, ...]: tuple,
-            Dict: dict,
-            Dict[Any, Any]: dict,
-            Dict[Any, object]: dict,
-            Dict[object, Any]: dict,
-            Dict[object, object]: dict,
-            Set: set,
-            Set[Any]: set,
-            Set[object]: set,
-            Sequence: Sequence[Any],
-            collections.Sequence: Sequence[Any],
-            MutableSequence: MutableSequence[Any],
-            collections.MutableSequence: MutableSequence[Any]
+            Tuple: Tuple[Any, ...],
+            collections.Sequence: Sequence,
+            collections.MutableSequence: MutableSequence
         }.get(bound, bound)
 
         origin = getattr(bound, '__origin__', None)
 
-        if bound is Any:
+        if bound in (object, Any):
             tp = AnyHandler
         elif origin in cls.origin_handlers:
             tp = cls.origin_handlers[origin]
+        elif bound in cls.origin_handlers:
+            tp = cls.origin_handlers[bound]
+            bound = bound[(Any,) * len(bound.__parameters__)]
         elif type(bound) in cls.subclass_handlers:
             tp = cls.subclass_handlers[type(bound)]
         elif isinstance(bound, type):
@@ -132,24 +119,30 @@ class DictHandler(Handler, origin=Dict):
 
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, dict)
-        var_k, var_v = gen.new_var(), gen.new_var()
-        gen.write_line('for {}, {} in {}.items():'.format(var_k, var_v, varname))
-        with gen.indent():
-            self.key_handler(gen, var_k, None if desc is None else
-                             'key of {}'.format(desc))
-            self.value_handler(gen, var_v, None if desc is None else
-                               'value at {{{}!r}} of {}'.format(var_k, desc))
+        if not self.key_handler.is_any or not self.value_handler.is_any:
+            var_k, var_v = gen.new_var(), gen.new_var()
+            gen.write_line('for {}, {} in {}.items():'.format(var_k, var_v, varname))
+            with gen.indent():
+                self.key_handler(gen, var_k, None if desc is None else
+                                 'key of {}'.format(desc))
+                self.value_handler(gen, var_v, None if desc is None else
+                                   'value at {{{}!r}} of {}'.format(var_k, desc))
 
     def __str__(self) -> str:
+        if self.key_handler.is_any and self.value_handler.is_any:
+            return 'dict'
         return 'Dict[{}, {}]'.format(self.key_handler, self.value_handler)
 
 
 class ListHandler(SingleArgumentHandler, origin=List):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, list)
-        gen.enumerate_and_check(varname, desc, self.handler)
+        if not self.handler.is_any:
+            gen.enumerate_and_check(varname, desc, self.handler)
 
     def __str__(self) -> str:
+        if self.handler.is_any:
+            return 'list'
         return 'List[{}]'.format(self.handler)
 
 
@@ -224,6 +217,8 @@ class TupleHandler(Handler, subclass=Tuple):
 
     def __str__(self) -> str:
         if self.ellipsis:
+            if self.handler.is_any:
+                return 'tuple'
             return 'Tuple[{}, ...]'.format(self.handler)
         return 'Tuple[{}]'.format(', '.join(map(str, self.handlers)))
 
@@ -258,7 +253,10 @@ class MutableSequenceHandler(SingleArgumentHandler, origin=MutableSequence):
 class SetHandler(SingleArgumentHandler, origin=Set):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, set)
-        gen.iter_and_check(varname, desc, self.handler)
+        if not self.handler.is_any:
+            gen.iter_and_check(varname, desc, self.handler)
 
     def __str__(self) -> str:
+        if self.handler.is_any:
+            return 'set'
         return 'Set[{}]'.format(self.handler)
