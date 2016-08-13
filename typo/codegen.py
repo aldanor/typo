@@ -10,7 +10,8 @@ from typo.utils import type_name
 
 
 class Codegen:
-    _v_cache_seq = {list: True, tuple: True, str: True, bytes: True}
+    _v_cache_seq = {list: True, tuple: True, str: True, bytes: True,
+                    bytearray: True, memoryview: True}
     _v_cache_mut_seq = {list: True}
 
     def __init__(self):
