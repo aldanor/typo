@@ -95,6 +95,12 @@ class Handler(metaclass=HandlerMeta):
         return False
 
 
+class SingleArgumentHandler(Handler):
+    def __init__(self, bound: Any) -> None:
+        super().__init__(bound)
+        self.handler = Handler(self.args[0])
+
+
 class AnyHandler(Handler):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.write_line('pass')
@@ -135,17 +141,13 @@ class DictHandler(Handler, origin=Dict):
         return 'Dict[{}, {}]'.format(self.key_handler, self.value_handler)
 
 
-class ListHandler(Handler, origin=List):
-    def __init__(self, bound: Any) -> None:
-        super().__init__(bound)
-        self.item_handler = Handler(self.args[0])
-
+class ListHandler(SingleArgumentHandler, origin=List):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, list)
-        gen.enumerate_and_check(varname, desc, self.item_handler)
+        gen.enumerate_and_check(varname, desc, self.handler)
 
     def __str__(self) -> str:
-        return 'List[{}]'.format(self.item_handler)
+        return 'List[{}]'.format(self.handler)
 
 
 class UnionHandler(Handler, subclass=Union):
@@ -197,62 +199,54 @@ class TupleHandler(Handler, subclass=Tuple):
         params = bound.__tuple_params__
         self.ellipsis = bound.__tuple_use_ellipsis__
         if self.ellipsis:
-            self.item_handler = Handler(params[0])
+            self.handler = Handler(params[0])
         else:
-            self.item_handlers = [Handler(p) for p in params]
+            self.handlers = [Handler(p) for p in params]
 
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_type(varname, desc, tuple)
         if self.ellipsis:
-            gen.enumerate_and_check(varname, desc, self.item_handler)
+            gen.enumerate_and_check(varname, desc, self.handler)
         else:
-            n = len(self.item_handlers)
+            n = len(self.handlers)
             var_n = gen.new_var()
             gen.write_line('{} = len({})'.format(var_n, varname))
             gen.write_line('if {} != {}:'.format(var_n, n))
             with gen.indent():
                 gen.fail(desc, 'tuple of length {}'.format(n), varname,
                          got='tuple of length {{{}}}'.format(var_n))
-            for i, item_handler in enumerate(self.item_handlers):
-                item_handler(gen, '{}[{}]'.format(varname, i),
-                             None if desc is None else 'item #{} of {}'.format(i, desc))
+            for i, handler in enumerate(self.handlers):
+                handler(gen, '{}[{}]'.format(varname, i),
+                        None if desc is None else 'item #{} of {}'.format(i, desc))
 
     def __str__(self) -> str:
         if self.ellipsis:
-            return 'Tuple[{}, ...]'.format(self.item_handler)
-        return 'Tuple[{}]'.format(', '.join(map(str, self.item_handlers)))
+            return 'Tuple[{}, ...]'.format(self.handler)
+        return 'Tuple[{}]'.format(', '.join(map(str, self.handlers)))
 
 
-class SequenceHandler(Handler, origin=Sequence):
-    def __init__(self, bound: Any) -> None:
-        super().__init__(bound)
-        self.item_handler = Handler(self.args[0])
-
+class SequenceHandler(SingleArgumentHandler, origin=Sequence):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_attrs_cached(varname, desc, 'sequence', 'v_cache_seq',
                                ['__iter__', '__getitem__', '__len__', '__contains__'])
-        if not self.item_handler.is_any:
-            gen.enumerate_and_check(varname, desc, self.item_handler)
+        if not self.handler.is_any:
+            gen.enumerate_and_check(varname, desc, self.handler)
 
     def __str__(self) -> str:
-        if self.item_handler.is_any:
+        if self.handler.is_any:
             return 'Sequence'
-        return 'Sequence[{}]'.format(self.item_handler)
+        return 'Sequence[{}]'.format(self.handler)
 
 
-class MutableSequenceHandler(Handler, origin=MutableSequence):
-    def __init__(self, bound: Any) -> None:
-        super().__init__(bound)
-        self.item_handler = Handler(self.args[0])
-
+class MutableSequenceHandler(SingleArgumentHandler, origin=MutableSequence):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
         gen.check_attrs_cached(varname, desc, 'mutable sequence', 'v_cache_mut_seq',
                                ['__iter__', '__getitem__', '__len__', '__contains__',
                                 '__setitem__', '__delitem__'])
-        if not self.item_handler.is_any:
-            gen.enumerate_and_check(varname, desc, self.item_handler)
+        if not self.handler.is_any:
+            gen.enumerate_and_check(varname, desc, self.handler)
 
     def __str__(self) -> str:
-        if self.item_handler.is_any:
+        if self.handler.is_any:
             return 'MutableSequence'
-        return 'MutableSequence[{}]'.format(self.item_handler)
+        return 'MutableSequence[{}]'.format(self.handler)
