@@ -4,7 +4,7 @@ import abc
 import collections
 
 from typing import (
-    Any, Dict, List, Tuple, Union, Optional, Callable, Sequence, MutableSequence
+    Any, Dict, List, Tuple, Union, Optional, Callable, Sequence, MutableSequence, Set
 )
 
 from typo.codegen import Codegen
@@ -40,6 +40,9 @@ class HandlerMeta(abc.ABCMeta):
             Dict[Any, object]: dict,
             Dict[object, Any]: dict,
             Dict[object, object]: dict,
+            Set: set,
+            Set[Any]: set,
+            Set[object]: set,
             Sequence: Sequence[Any],
             collections.Sequence: Sequence[Any],
             MutableSequence: MutableSequence[Any],
@@ -250,3 +253,12 @@ class MutableSequenceHandler(SingleArgumentHandler, origin=MutableSequence):
         if self.handler.is_any:
             return 'MutableSequence'
         return 'MutableSequence[{}]'.format(self.handler)
+
+
+class SetHandler(SingleArgumentHandler, origin=Set):
+    def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
+        gen.check_type(varname, desc, set)
+        gen.iter_and_check(varname, desc, self.handler)
+
+    def __str__(self) -> str:
+        return 'Set[{}]'.format(self.handler)

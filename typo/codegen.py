@@ -106,6 +106,14 @@ class Codegen:
         with self.indent():
             self.fail(desc, expected, varname)
 
+    def iter_and_check(self, varname: str, desc: str,
+                       handler: 'typo.handlers.Handler') -> None:
+        var_v = self.new_var()
+        self.write_line('for {} in {}:'.format(var_v, varname))
+        with self.indent():
+            handler(self, var_v, None if desc is None else
+                    'item of {}'.format(desc))
+
     def enumerate_and_check(self, varname: str, desc: str,
                             handler: 'typo.handlers.Handler') -> None:
         var_i, var_v = self.new_var(), self.new_var()

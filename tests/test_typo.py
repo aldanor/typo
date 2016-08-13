@@ -3,7 +3,7 @@
 import collections
 import pytest
 
-from typing import Any, List, Tuple, Dict, Sequence, MutableSequence
+from typing import Any, List, Tuple, Dict, Sequence, MutableSequence, Set
 
 
 pytest.add_handler_test(
@@ -142,4 +142,17 @@ pytest.add_handler_test(
     [[], [1, 'foo'], MyMutableSequence()],
     [(42, 'expected mutable sequence, got int'),
      (MySequence(), 'expected mutable sequence, got test_typo.MySequence')]
+)
+
+pytest.add_handler_test(
+    'test_set', Set[int], 'Set[int]',
+    [set(), {1}, {1, 2, 3}],
+    [(1, 'expected set, got int'),
+     ({1, 'foo', 2}, 'invalid item of.*expected int, got str')]
+)
+
+pytest.add_handler_test(
+    'test_set_no_typevar', (Set, Set[Any], Set[object]), 'set',
+    [set(), {1, 'foo'}],
+    [(1, 'expected set, got int')]
 )
