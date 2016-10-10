@@ -4,7 +4,8 @@ import abc
 import collections
 
 from typing import (
-    Any, Dict, List, Tuple, Union, Optional, Callable, Sequence, MutableSequence, Set
+    Any, Dict, List, Tuple, Union, Optional, Callable, Sequence, MutableSequence, Set,
+    TypeVar
 )
 
 from typo.codegen import Codegen
@@ -73,10 +74,12 @@ class Handler(metaclass=HandlerMeta):
         return self.bound.__parameters__
 
     def compile(self) -> Callable[[Any], None]:
-        gen = Codegen()
+        gen = Codegen(typevars=self.typevars)
         var = gen.new_var()
         gen.write_line('def check({}):'.format(var))
         with gen.indent():
+            if self.typevars:
+                gen.init_typevars()
             self(gen, var, 'input')
         return gen.compile('check')
 
@@ -84,11 +87,26 @@ class Handler(metaclass=HandlerMeta):
     def is_any(self):
         return False
 
+    @property
+    def typevars(self) -> Set[TypeVar]:
+        return set()
+
+    @property
+    def valid_typevar_bound(self):
+        return False
+
+    def valid_typevar_constraint(self, typevar):
+        return self.valid_typevar_bound
+
 
 class SingleArgumentHandler(Handler):
     def __init__(self, bound: Any) -> None:
         super().__init__(bound)
         self.handler = Handler(self.args[0])
+
+    @property
+    def typevars(self) -> Set[TypeVar]:
+        return self.handler.typevars
 
 
 class AnyHandler(Handler):
@@ -102,6 +120,10 @@ class AnyHandler(Handler):
     def is_any(self):
         return True
 
+    @property
+    def valid_typevar_bound(self):
+        return True
+
 
 class TypeHandler(Handler):
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
@@ -109,6 +131,116 @@ class TypeHandler(Handler):
 
     def __str__(self) -> str:
         return type_name(self.bound)
+
+    @property
+    def valid_typevar_bound(self):
+        return True
+
+
+class TypeVarHandler(Handler, subclass=TypeVar('')):
+    def __init__(self, bound: Any) -> None:
+        super().__init__(bound)
+
+        self.type_constraints = ()
+        self.typevar_constraints = []
+        if self.bound.__constraints__ is not None:
+            handlers = [Handler(c) for c in self.bound.__constraints__]
+            for h in handlers:
+                if not isinstance(h, (TypeHandler, TypeVarHandler)):
+                    raise ValueError('invalid typevar constraint: {}'.format(h))
+                if self.bound in h.typevars:
+                    raise ValueError('recursive typevar constraint: {}'.format(h))
+            self.type_constraints = tuple(h.bound for h in handlers if isinstance(h, TypeHandler))
+            self.typevar_constraints = [h for h in handlers if isinstance(h, TypeVarHandler)]
+
+        self.bound_handler = None
+        if self.bound.__bound__ is not None:
+            self.bound_handler = Handler(self.bound.__bound__)
+            if not self.bound_handler.valid_typevar_bound:
+                raise ValueError('invalid typevar bound: {}'.format(self.bound_handler))
+
+    @property
+    def has_constraints(self) -> bool:
+        return bool(self.type_constraints or self.typevar_constraints)
+
+    @property
+    def has_bound(self) -> bool:
+        return self.bound_handler is not None
+
+    def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
+        # TODO: don't need outer list if there are no generic unions
+        # TODO: can infer when the typevar has been definitely set
+        # TODO: can infer when the typevar is definitely uninitialized
+        # TODO: more efficient typevar processing for sequences
+        # TODO: simplify indent/write_line, make them accept fmt args
+        var_i, var_tv, var_tp, var_len, var_k = gen.new_vars(5)
+        index = gen.typevar_id(self.bound)
+        gen.write_line('{} = type({})'.format(var_tp, varname))
+        gen.write_line('{} = len(tv)'.format(var_len))
+        gen.write_line('for {}, {} in enumerate(tv):'.format(var_i, var_tv))
+        tv = '{}[{}]'.format(var_tv, index)
+        with gen.indent():
+            gen.write_line('{} = {} + len(tv) - {}'.format(var_k, var_i, var_len))
+            gen.write_line('if {} is not None:'.format(tv))
+            with gen.indent():
+                gen.write_line('if {} is not {}:'.format(tv, var_tp))
+                with gen.indent():
+                    gen.write_line('tv.pop({})'.format(var_k))
+                gen.write_line('continue')
+            if self.has_bound:
+                gen.write_line('try:')
+                with gen.indent():
+                    self.bound_handler(gen, varname, desc)
+                    gen.write_line('{} = {}'.format(tv, var_tp))
+                gen.write_line('except TypeError:')
+                with gen.indent():
+                    gen.write_line('tv.pop({})'.format(var_k))
+            elif self.has_constraints:
+                if self.type_constraints:
+                    types = ', '.join(gen.ref_type(tp) for tp in self.type_constraints) + ', '
+                    gen.write_line('if {} in ({}):'.format(var_tp, types))
+                    with gen.indent():
+                        gen.write_line('{} = {}'.format(tv, var_tp))
+                        gen.write_line('continue')
+                if self.typevar_constraints:
+                    var_old_tv, var_tv_init, var_tv_res = gen.new_vars(3)
+                    gen.write_line('{} = [{}]'.format(var_tv_init, var_tv))
+                    gen.write_line('{} = tv'.format(var_old_tv))
+                    gen.write_line('tv.pop({})'.format(var_k))
+                    for handler in self.typevar_constraints:
+                        gen.write_line('tv = {}'.format(var_tv_init))
+                        gen.write_line('try:')
+                        with gen.indent():
+                            handler(gen, varname, desc)
+                            gen.write_line('for {} in tv:'.format(var_tv_res))
+                            with gen.indent():
+                                gen.write_line('{}.insert({}, {})'
+                                               .format(var_old_tv, var_k, var_tv_res))
+                        gen.write_line('except TypeError:')
+                        with gen.indent():
+                            gen.write_line('pass')
+                    gen.write_line('tv = {}'.format(var_old_tv))
+                else:
+                    gen.write_line('{} = {}'.format(tv, var_tp))
+        gen.write_line('if not tv:')
+        with gen.indent():
+            gen.fail(desc, 'foo', varname)
+
+    def __str__(self) -> str:
+        if self.has_bound:
+            return '{}(bound={})'.format(self.bound.__name__, self.bound_handler)
+        elif self.has_constraints:
+            constraints = ', '.join(str(Handler(c)) for c in self.bound.__constraints__)
+            return '{}({})'.format(self.bound.__name__, constraints)
+        return self.bound.__name__
+
+    @property
+    def typevars(self) -> Set[TypeVar]:
+        return {self.bound}
+
+    @property
+    def valid_typevar_bound(self):
+        return True
 
 
 class DictHandler(Handler, origin=Dict):
@@ -132,6 +264,10 @@ class DictHandler(Handler, origin=Dict):
         if self.key_handler.is_any and self.value_handler.is_any:
             return 'dict'
         return 'Dict[{}, {}]'.format(self.key_handler, self.value_handler)
+
+    @property
+    def typevars(self) -> Set[TypeVar]:
+        return self.key_handler.typevars | self.value_handler.typevars
 
 
 class ListHandler(SingleArgumentHandler, origin=List):
@@ -188,6 +324,10 @@ class UnionHandler(Handler, subclass=Union):
     def __str__(self) -> str:
         return 'Union[{}]'.format(', '.join(map(str, self.all__handlers)))
 
+    @property
+    def typevars(self) -> Set[TypeVar]:
+        return set(t for h in self.handlers for t in h.typevars)
+
 
 class TupleHandler(Handler, subclass=Tuple):
     def __init__(self, bound: Any) -> None:
@@ -221,6 +361,12 @@ class TupleHandler(Handler, subclass=Tuple):
                 return 'tuple'
             return 'Tuple[{}, ...]'.format(self.handler)
         return 'Tuple[{}]'.format(', '.join(map(str, self.handlers)))
+
+    @property
+    def typevars(self) -> Set[TypeVar]:
+        if self.ellipsis:
+            return self.handler.typevars
+        return set(t for h in self.handlers for t in h.typevars)
 
 
 class SequenceHandler(SingleArgumentHandler, origin=Sequence):

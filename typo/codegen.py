@@ -14,20 +14,30 @@ class Codegen:
                     bytearray: True, memoryview: True}
     _v_cache_mut_seq = {list: True}
 
-    def __init__(self):
+    def __init__(self, typevars=None):
         self.lines = []
         self.indent_level = 0
         self.next_var_id = 0
         self.next_type_id = 0
         self.types = {}
+        self.typevars = sorted(typevars or [], key=str)
         self.context = {
             'collections': collections,
             'typing': typing,
             'rt_fail': self.rt_fail,
             'rt_type_fail': self.rt_type_fail,
             'v_cache_seq': self._v_cache_seq,
-            'v_cache_mut_seq': self._v_cache_mut_seq
+            'v_cache_mut_seq': self._v_cache_mut_seq,
         }
+        for i, tv in enumerate(self.typevars):
+            if tv.__constraints__:
+                self.context['constraints_{}'.format(i)] = tv.__constraints__
+
+    def typevar_id(self, typevar):
+        return self.typevars.index(typevar)
+
+    def init_typevars(self):
+        self.write_line('tv = [{!r}]'.format([None] * len(self.typevars)))
 
     def compile(self, name):
         context = self.context.copy()
@@ -57,6 +67,9 @@ class Codegen:
         varname = 'v_{}'.format(self.next_var_id)
         self.next_var_id += 1
         return varname
+
+    def new_vars(self, n):
+        return tuple(self.new_var() for _ in range(n))
 
     def ref_type(self, tp):
         if tp.__module__ == 'builtins':
