@@ -240,7 +240,20 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
 
     @property
     def valid_typevar_bound(self):
-        return True
+        # Technically, this is possible but would require a bit more codegen work. The problem
+        # is that in the current implementation running the bound handler would mutate the
+        # current state of typevars the first time it sees the bound, i.e. in this example:
+        #     class Int(int): ...
+        #     T = TypeVar('T')
+        #     U = TypeVar('U', bound=T)
+        # and this signature:
+        #     Tuple[U, T]
+        # the following input would fail:
+        #     (Int(1), 2)
+        # although Int is a subclass of int, this should be accepted but it's not, because
+        # T is erroneously set to Int; instead it should remember that Int is now a
+        # *subclass* (lower bound) for type variable T.
+        return False
 
 
 class DictHandler(Handler, origin=Dict):
