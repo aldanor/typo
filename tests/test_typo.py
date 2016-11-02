@@ -174,3 +174,12 @@ def test_invalid_typevar_bound(bound):
     T = TypeVar('T', bound=bound)
     pytest.raises_regexp(ValueError, 'invalid typevar bound',
                          Handler, T)
+
+
+@pytest.mark.parametrize('constraint', [
+    Any, List[int], Dict[int, int], Set[int]
+])
+def test_invalid_typevar_constraint(constraint):
+    T = TypeVar('T', int, constraint)
+    pytest.raises_regexp(ValueError, 'invalid typevar constraint',
+                         Handler, T)
