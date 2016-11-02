@@ -165,3 +165,12 @@ pytest.add_handler_test(
 def test_forward_reference(bound):
     pytest.raises_regexp(ValueError, 'forward references are not supported',
                          Handler, bound)
+
+
+@pytest.mark.parametrize('bound', [
+    List[int], Dict[int, int], Set[int], TypeVar('X'), List[TypeVar('X')]
+])
+def test_invalid_typevar_bound(bound):
+    T = TypeVar('T', bound=bound)
+    pytest.raises_regexp(ValueError, 'invalid typevar bound',
+                         Handler, T)
