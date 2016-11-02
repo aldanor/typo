@@ -89,7 +89,7 @@ class Handler(metaclass=HandlerMeta):
         return gen.compile('check')
 
     @property
-    def is_any(self):
+    def is_any(self) -> bool:
         return False
 
     @property
@@ -97,10 +97,10 @@ class Handler(metaclass=HandlerMeta):
         return set()
 
     @property
-    def valid_typevar_bound(self):
+    def valid_typevar_bound(self) -> bool:
         return False
 
-    def valid_typevar_constraint(self, typevar):
+    def valid_typevar_constraint(self, typevar) -> bool:
         return self.valid_typevar_bound
 
 
@@ -122,11 +122,11 @@ class AnyHandler(Handler):
         return 'Any'
 
     @property
-    def is_any(self):
+    def is_any(self) -> bool:
         return True
 
     @property
-    def valid_typevar_bound(self):
+    def valid_typevar_bound(self) -> bool:
         return True
 
 
@@ -138,7 +138,7 @@ class TypeHandler(Handler):
         return type_name(self.bound)
 
     @property
-    def valid_typevar_bound(self):
+    def valid_typevar_bound(self) -> bool:
         return True
 
 
@@ -244,7 +244,7 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
         return {self.bound}
 
     @property
-    def valid_typevar_bound(self):
+    def valid_typevar_bound(self) -> bool:
         # Technically, this is possible but would require a bit more codegen work. The problem
         # is that in the current implementation running the bound handler would mutate the
         # current state of typevars the first time it sees the bound, i.e. in this example:
