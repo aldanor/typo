@@ -3,7 +3,8 @@
 import collections
 import pytest
 
-from typing import Any, List, Tuple, Dict, Sequence, MutableSequence, Set
+from typo.handlers import Handler
+from typing import Any, List, Tuple, Dict, Sequence, MutableSequence, Set, TypeVar
 
 
 pytest.add_handler_test(
@@ -156,3 +157,11 @@ pytest.add_handler_test(
     [set(), {1, 'foo'}],
     [(1, 'expected set, got int')]
 )
+
+
+@pytest.mark.parametrize('bound', [
+    List['T'], List[TypeVar('T', int, 'T')]
+])
+def test_forward_reference(bound):
+    pytest.raises_regexp(ValueError, 'forward references are not supported',
+                         Handler, bound)

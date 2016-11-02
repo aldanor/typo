@@ -5,7 +5,7 @@ import collections
 
 from typing import (
     Any, Dict, List, Tuple, Union, Optional, Callable, Sequence, MutableSequence, Set,
-    TypeVar
+    TypeVar, _ForwardRef
 )
 
 from typo.codegen import Codegen
@@ -35,6 +35,11 @@ class HandlerMeta(abc.ABCMeta):
         }.get(bound, bound)
 
         origin = getattr(bound, '__origin__', None)
+
+        # Note that it should be possible to resolve forward references since they
+        # store frames in which they were declared; would require a bit more work.
+        if isinstance(bound, _ForwardRef):
+            raise ValueError('forward references are not currently supported: {}'.format(bound))
 
         if bound in (object, Any):
             tp = AnyHandler
