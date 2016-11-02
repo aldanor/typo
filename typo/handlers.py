@@ -229,7 +229,7 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                     gen.write_line('{} = {}'.format(tv, var_tp))
         gen.write_line('if not tv:')
         with gen.indent():
-            gen.fail(desc, 'foo', varname)
+            gen.fail_msg(desc, 'cannot assign {{tp}} to {}'.format(self.bound.__name__), varname)
 
     def __str__(self) -> str:
         if self.has_bound:

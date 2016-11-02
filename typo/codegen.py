@@ -26,6 +26,7 @@ class Codegen:
             'typing': typing,
             'rt_fail': self.rt_fail,
             'rt_type_fail': self.rt_type_fail,
+            'rt_fail_msg': self.rt_fail_msg,
             'v_cache_seq': self._v_cache_seq,
             'v_cache_mut_seq': self._v_cache_mut_seq,
         }
@@ -53,6 +54,11 @@ class Codegen:
     def rt_type_fail(desc: str, expected: str, var: Any, **kwargs):
         raise TypeError('invalid {}: expected {}, got {}'
                         .format(desc.format(**kwargs), expected, type_name(type(var))))
+
+    @staticmethod
+    def rt_fail_msg(desc: str, msg: str, var: Any, **kwargs):
+        raise TypeError('invalid {}: {}'.format(desc.format(**kwargs),
+                                                msg.format(tp=type_name(type(var)), **kwargs)))
 
     def write_line(self, line):
         self.lines.append(' ' * self.indent_level * 4 + line)
@@ -94,6 +100,13 @@ class Codegen:
         else:
             self.write_line('rt_fail("{}", "{}", {}, "{}", **locals())'
                             .format(desc, expected, varname, got))
+
+    def fail_msg(self, desc: str, msg: str, varname: str):
+        if desc is None:
+            self.write_line('raise TypeError')
+        else:
+            self.write_line('rt_fail_msg("{}", "{}", {}, **locals())'
+                            .format(desc, msg, varname))
 
     def if_not_isinstance(self, varname: str, tp: Union[type, Tuple[type, ...]]) -> None:
         if isinstance(tp, tuple):
