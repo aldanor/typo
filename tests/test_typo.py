@@ -163,7 +163,7 @@ pytest.add_handler_test(
     List['T'], List[TypeVar('T', int, 'T')]
 ])
 def test_forward_reference(bound):
-    pytest.raises_regexp(ValueError, 'forward references are not supported',
+    pytest.raises_regexp(ValueError, 'forward references are not currently supported',
                          Handler, bound)
 
 
