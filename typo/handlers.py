@@ -88,7 +88,7 @@ class Handler(metaclass=HandlerMeta):
         return False
 
     @property
-    def typevars(self) -> Set[TypeVar]:
+    def typevars(self) -> Set[type(TypeVar)]:
         return set()
 
     @property
@@ -105,7 +105,7 @@ class SingleArgumentHandler(Handler):
         self.handler = Handler(self.args[0])
 
     @property
-    def typevars(self) -> Set[TypeVar]:
+    def typevars(self) -> Set[type(TypeVar)]:
         return self.handler.typevars
 
 
@@ -235,7 +235,7 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
         return self.bound.__name__
 
     @property
-    def typevars(self) -> Set[TypeVar]:
+    def typevars(self) -> Set[type(TypeVar)]:
         return {self.bound}
 
     @property
@@ -266,7 +266,7 @@ class DictHandler(Handler, origin=Dict):
         return 'Dict[{}, {}]'.format(self.key_handler, self.value_handler)
 
     @property
-    def typevars(self) -> Set[TypeVar]:
+    def typevars(self) -> Set[type(TypeVar)]:
         return self.key_handler.typevars | self.value_handler.typevars
 
 
@@ -325,7 +325,7 @@ class UnionHandler(Handler, subclass=Union):
         return 'Union[{}]'.format(', '.join(map(str, self.all__handlers)))
 
     @property
-    def typevars(self) -> Set[TypeVar]:
+    def typevars(self) -> Set[type(TypeVar)]:
         return set(t for h in self.handlers for t in h.typevars)
 
 
@@ -363,7 +363,7 @@ class TupleHandler(Handler, subclass=Tuple):
         return 'Tuple[{}]'.format(', '.join(map(str, self.handlers)))
 
     @property
-    def typevars(self) -> Set[TypeVar]:
+    def typevars(self) -> Set[type(TypeVar)]:
         if self.ellipsis:
             return self.handler.typevars
         return set(t for h in self.handlers for t in h.typevars)
