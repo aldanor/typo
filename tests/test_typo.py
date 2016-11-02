@@ -220,3 +220,15 @@ pytest.add_handler_test(
      ([1, Int(2)], r'cannot assign test_typo.Int to V'),
      ([Int(1), 2], r'cannot assign int to V')]
 )
+
+W = TypeVar('W', int, float)
+
+pytest.add_handler_test(
+    'test_typevar_basic_constraints', Tuple[W, W], 'Tuple[W(int, float), W(int, float)]',
+    [(1, 2),
+     (1.1, 2.2)],
+    [(('a', 'b'), 'cannot assign str to W'),
+     ((1, 2.2), 'cannot assign float to W'),
+     ((1.1, 2), 'cannot assign int to W'),
+     ((Int(1), Int(1)), 'cannot assign test_typo.Int to W')]
+)
