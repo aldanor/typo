@@ -261,14 +261,9 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
         # if the list of valid assignments is now empty, it is a fail
         gen.write_line('if not tv:')
         with gen.indent():
-            gen.fail_msg(desc, 'cannot assign {{tp}} to {}'.format(self.bound.__name__), varname)
+            gen.fail_msg(desc, 'cannot assign {{tp}} to {}'.format(self), varname)
 
     def __str__(self) -> str:
-        if self.has_bound:
-            return '{}(bound={})'.format(self.bound.__name__, self.bound_handler)
-        elif self.has_constraints:
-            constraints = ', '.join(str(Handler(c)) for c in self.bound.__constraints__)
-            return '{}({})'.format(self.bound.__name__, constraints)
         return self.bound.__name__
 
     @property

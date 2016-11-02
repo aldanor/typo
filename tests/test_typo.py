@@ -210,7 +210,7 @@ pytest.add_handler_test(
 V = TypeVar('V', bound=int)
 
 pytest.add_handler_test(
-    'test_typevar_bound', List[V], 'List[V(bound=int)]',
+    'test_typevar_bound', List[V], 'List[V]',
     [[],
      [1, 2],
      [Int(1), Int(2)]],
@@ -224,7 +224,7 @@ pytest.add_handler_test(
 W = TypeVar('W', int, float)
 
 pytest.add_handler_test(
-    'test_typevar_basic_constraints', Tuple[W, W], 'Tuple[W(int, float), W(int, float)]',
+    'test_typevar_basic_constraints', Tuple[W, W], 'Tuple[W, W]',
     [(1, 2),
      (1.1, 2.2)],
     [(('a', 'b'), 'cannot assign str to W'),
