@@ -178,6 +178,8 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
         # TODO: can infer when the typevar is definitely uninitialized
         # TODO: more efficient typevar processing for sequences
         # TODO: simplify indent/write_line, make them accept fmt args
+        # TODO: List, Dict, Sequence, etc should be valid bounds
+        # TODO: support forward references (_ForwardRef), care about recursion
         var_i, var_tv, var_tp, var_len, var_k = gen.new_vars(5)
         index = gen.typevar_id(self.bound)
         gen.write_line('{} = type({})'.format(var_tp, varname))
