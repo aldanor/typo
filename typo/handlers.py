@@ -228,7 +228,9 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                             gen.write_line('pass')
                     gen.write_line('tv = {}'.format(var_old_tv))
                 else:
-                    gen.write_line('{} = {}'.format(tv, var_tp))
+                    gen.write_line('tv.pop({})'.format(var_k))
+            else:
+                gen.write_line('{} = {}'.format(tv, var_tp))
         gen.write_line('if not tv:')
         with gen.indent():
             gen.fail_msg(desc, 'cannot assign {{tp}} to {}'.format(self.bound.__name__), varname)
