@@ -206,3 +206,17 @@ pytest.add_handler_test(
      ((Int(1), {'a': 2}), 'invalid value.*cannot assign int to T'),
      ((1, {'a': Int(2)}), 'invalid value.*cannot assign test_typo.Int to T')]
 )
+
+V = TypeVar('V', bound=int)
+
+pytest.add_handler_test(
+    'test_typevar_bound', List[V], 'List[V(bound=int)]',
+    [[],
+     [1, 2],
+     [Int(1), Int(2)]],
+    [('foo', 'expected list, got str'),
+     (['a'], r'cannot assign str to V'),
+     ([1, 'a'], r'cannot assign str to V'),
+     ([1, Int(2)], r'cannot assign test_typo.Int to V'),
+     ([Int(1), 2], r'cannot assign int to V')]
+)
