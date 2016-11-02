@@ -182,34 +182,56 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
         # TODO: support forward references (_ForwardRef), care about recursion
         var_i, var_tv, var_tp, var_len, var_k = gen.new_vars(5)
         index = gen.typevar_id(self.bound)
+        tv = '{}[{}]'.format(var_tv, index)
         gen.write_line('{} = type({})'.format(var_tp, varname))
         gen.write_line('{} = len(tv)'.format(var_len))
+
+        # for all possible assignments to type variables
         gen.write_line('for {}, {} in enumerate(tv):'.format(var_i, var_tv))
-        tv = '{}[{}]'.format(var_tv, index)
         with gen.indent():
             gen.write_line('{} = {} + len(tv) - {}'.format(var_k, var_i, var_len))
+
+            # if the type variable of interest is already set in this assignment
             gen.write_line('if {} is not None:'.format(tv))
             with gen.indent():
+                # check if value type matches it exactly
                 gen.write_line('if {} is not {}:'.format(tv, var_tp))
                 with gen.indent():
+                    # if not, the assignment is inconsistent, remove it
                     gen.write_line('tv.pop({})'.format(var_k))
+                # and go on to the next assignment
                 gen.write_line('continue')
+
+            # otherwise, the type variable has not been bound; first, consider
+            # the case where the type variable has a specified upper bound
             if self.has_bound:
+                # try to run the bound handler
                 gen.write_line('try:')
                 with gen.indent():
                     self.bound_handler(gen, varname, desc)
+                    # if it succeeds, bind the type variable to class of the value
                     gen.write_line('{} = {}'.format(tv, var_tp))
                 gen.write_line('except TypeError:')
                 with gen.indent():
+                    # otherwise, the assignment is inconsistent, remove it
                     gen.write_line('tv.pop({})'.format(var_k))
+
+            # second, if the type variable has invariant constraints
             elif self.has_constraints:
+                # if there are simple class constraints, check them first
                 if self.type_constraints:
                     types = ', '.join(gen.ref_type(tp) for tp in self.type_constraints) + ', '
+                    # if the class of the value matches one of the constraints exactly
                     gen.write_line('if {} in ({}):'.format(var_tp, types))
                     with gen.indent():
+                        # then bind the type variable to the class of the value and go on
                         gen.write_line('{} = {}'.format(tv, var_tp))
                         gen.write_line('continue')
+
+                # if there are no simple class constraints or if they are not satisfied,
+                # check if there are any generic constraints
                 if self.typevar_constraints:
+                    # this is complicated... (somewhat similar to union type)
                     var_old_tv, var_tv_init, var_tv_res = gen.new_vars(3)
                     gen.write_line('{} = [{}]'.format(var_tv_init, var_tv))
                     gen.write_line('{} = tv'.format(var_old_tv))
@@ -227,10 +249,16 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                         with gen.indent():
                             gen.write_line('pass')
                     gen.write_line('tv = {}'.format(var_old_tv))
+
+                # there are no generic constraints, and simple constraints failed
                 else:
                     gen.write_line('tv.pop({})'.format(var_k))
+
+            # there are no bounds nor constraints, just bind the type variable
             else:
                 gen.write_line('{} = {}'.format(tv, var_tp))
+
+        # if the list of valid assignments is now empty, it is a fail
         gen.write_line('if not tv:')
         with gen.indent():
             gen.fail_msg(desc, 'cannot assign {{tp}} to {}'.format(self.bound.__name__), varname)
