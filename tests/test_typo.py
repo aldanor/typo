@@ -3,6 +3,8 @@
 import collections
 import pytest
 
+from collections import OrderedDict
+
 from typo.handlers import Handler
 from typing import Any, List, Tuple, Dict, Sequence, MutableSequence, Set, TypeVar
 
@@ -183,3 +185,24 @@ def test_invalid_typevar_constraint(constraint):
     T = TypeVar('T', int, constraint)
     pytest.raises_regexp(ValueError, 'invalid typevar constraint',
                          Handler, T)
+
+
+class Int(int):
+    ...
+
+T, U = TypeVar('T'), TypeVar('U')
+
+
+pytest.add_handler_test(
+    'test_typevar_basic', Tuple[T, Dict[U, T]], 'Tuple[T, Dict[U, T]]',
+    [(1, {}),
+     (1, {1: 2, 3: 4}),
+     ({}, {'a': {1: 2}})],
+    [(1, 'expected tuple, got int'),
+     ((1, {2: '3'}), 'invalid value at 2 of item #1.*cannot assign str to T'),
+     ((1, OrderedDict([('a', 1), (2, 3)])), 'invalid key.*cannot assign int to U'),
+     ((1, OrderedDict([(Int(2), 3), (4, 5)])), 'invalid key.*cannot assign int to U'),
+     ((1, OrderedDict([(2, 3), (Int(4), 5)])), 'invalid key.*cannot assign test_typo.Int to U'),
+     ((Int(1), {'a': 2}), 'invalid value.*cannot assign int to T'),
+     ((1, {'a': Int(2)}), 'invalid value.*cannot assign test_typo.Int to T')]
+)
