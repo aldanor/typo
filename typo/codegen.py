@@ -70,7 +70,7 @@ class Codegen:
         self.indent_level -= 1
 
     def new_var(self):
-        varname = 'v_{}'.format(self.next_var_id)
+        varname = 'v_{:03d}'.format(self.next_var_id)
         self.next_var_id += 1
         return varname
 
