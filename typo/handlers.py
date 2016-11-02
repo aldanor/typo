@@ -208,7 +208,7 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                 # try to run the bound handler
                 gen.write_line('try:')
                 with gen.indent():
-                    self.bound_handler(gen, varname, desc)
+                    self.bound_handler(gen, varname, None)
                     # if it succeeds, bind the type variable to class of the value
                     gen.write_line('{} = {}'.format(tv, var_tp))
                 gen.write_line('except TypeError:')
@@ -240,7 +240,7 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                         gen.write_line('tv = {}'.format(var_tv_init))
                         gen.write_line('try:')
                         with gen.indent():
-                            handler(gen, varname, desc)
+                            handler(gen, varname, None)
                             gen.write_line('for {} in tv:'.format(var_tv_res))
                             with gen.indent():
                                 gen.write_line('{}.insert({}, {})'
