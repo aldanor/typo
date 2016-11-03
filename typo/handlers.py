@@ -234,10 +234,11 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                     # this is complicated... (somewhat similar to union type)
                     var_old_tv, var_tv_init, var_tv_res = gen.new_vars(3)
                     gen.write_line('{} = [{}]'.format(var_tv_init, var_tv))
+                    gen.write_line('{}[0][{}] = {}'.format(var_tv_init, index, var_tp))
                     gen.write_line('{} = tv'.format(var_old_tv))
                     gen.write_line('tv.pop({})'.format(var_k))
                     for handler in self.typevar_constraints:
-                        gen.write_line('tv = {}'.format(var_tv_init))
+                        gen.write_line('tv = list({})'.format(var_tv_init))
                         gen.write_line('try:')
                         with gen.indent():
                             handler(gen, varname, None)
