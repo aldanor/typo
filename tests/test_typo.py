@@ -232,3 +232,20 @@ pytest.add_handler_test(
      ((1.1, 2), 'cannot assign int to W'),
      ((Int(1), Int(1)), 'cannot assign test_typo.Int to W')]
 )
+
+X = TypeVar('X', str, W, T)
+
+pytest.add_handler_test(
+    'test_typevar_complex_constraints', Tuple[X, W, T], 'Tuple[X, W, T]',
+    [('a', 1, {}),
+     ('a', 2.2, {}),
+     (1, 2, {}),
+     (1.1, 2.2, {}),
+     ([], 1, []),
+     ([], 1.1, [])],
+    [(('a', 'b', {}), 'cannot assign str to W'),
+     ((1, 'b', {}), 'cannot assign str to W'),
+     ((1.1, 'b', {}), 'cannot assign str to W'),
+     (([], 'b', {}), 'cannot assign str to W'),
+     (([], 1, 'a'), 'cannot assign str to T')]
+)
