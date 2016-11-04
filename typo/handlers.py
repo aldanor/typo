@@ -187,7 +187,7 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
         gen.write_line('{} = len(tv)'.format(var_len))
 
         # for all possible assignments to type variables
-        gen.write_line('for {}, {} in enumerate(tv):'.format(var_i, var_tv))
+        gen.write_line('for {}, {} in enumerate(list(tv)):'.format(var_i, var_tv))
         with gen.indent():
             gen.write_line('{} = {} + len(tv) - {}'.format(var_k, var_i, var_len))
 
@@ -232,13 +232,15 @@ class TypeVarHandler(Handler, subclass=TypeVar('')):
                 # check if there are any generic constraints
                 if self.typevar_constraints:
                     # this is complicated... (somewhat similar to union type)
+                    # ... should really use linked lists for all of this stuff
                     var_old_tv, var_tv_init, var_tv_res = gen.new_vars(3)
-                    gen.write_line('{} = [{}]'.format(var_tv_init, var_tv))
+                    gen.write_line('{} = [list({})]'.format(var_tv_init, var_tv))
                     gen.write_line('{}[0][{}] = {}'.format(var_tv_init, index, var_tp))
                     gen.write_line('{} = tv'.format(var_old_tv))
                     gen.write_line('tv.pop({})'.format(var_k))
                     for handler in self.typevar_constraints:
-                        gen.write_line('tv = list({})'.format(var_tv_init))
+                        # TODO: simplify this down a bit
+                        gen.write_line('tv = [list({}[0])]'.format(var_tv_init))
                         gen.write_line('try:')
                         with gen.indent():
                             handler(gen, varname, None)
