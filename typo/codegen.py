@@ -15,6 +15,7 @@ class Codegen:
     _v_cache_mut_seq = {list: True}
 
     def __init__(self, typevars=None):
+        # TODO: accept list of handlers, build the set of typevars here
         self.lines = []
         self.indent_level = 0
         self.next_var_id = 0
