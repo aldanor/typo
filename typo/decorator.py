@@ -80,6 +80,7 @@ def type_check(func: Callable) -> Callable:
         if gen.typevars:
             gen.init_typevars()
 
+        # Execute all handlers.
         for arg in signature.parameters:
             if arg in handlers:
                 handler = handlers[arg]
@@ -88,7 +89,11 @@ def type_check(func: Callable) -> Callable:
                     PositionalArgsHandler: 'positional arguments'
                 }.get(type(handler), '`{}`'.format(arg))
                 handler(gen, arg, var_desc)
+
+        # Call the function and remember the return value.
         gen.write_line('{} = {}({})'.format(return_var, func_var, ', '.join(call_args)))
+
+        # Optionally, check the return value type before returning.
         return_handler(gen, return_var, 'return value')
         gen.write_line('return {}'.format(return_var))
 
