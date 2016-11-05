@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from typo.decorator import type_check
+from pytest import _, type_check_test
 
 
-def test_wrapper():
-    T = type('T', (), {})
+@type_check_test()
+def test_wrapper(x: int, *args, **kwargs: type('T', (), {})) -> int:
+    "Test docstring."
 
-    def f(x: int, *args, **kwargs: T) -> int:
-        "The docstring."
 
-    g = type_check(f)
-    for magic in ('module', 'name', 'qualname', 'doc', 'annotations'):
-        attr = '__' + magic + '__'
-        assert getattr(f, attr) == getattr(g, attr)
-
-    assert isinstance(g.wrapper_code, str)
