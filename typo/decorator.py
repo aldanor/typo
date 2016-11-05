@@ -76,6 +76,10 @@ def type_check(func: Callable) -> Callable:
     # Generate code for the function body.
     gen.write_line('def {}{}:'.format(func.__name__, str(signature)))
     with gen.indent():
+        # Initialize typevars if required.
+        if gen.typevars:
+            gen.init_typevars()
+
         for arg in signature.parameters:
             if arg in handlers:
                 handler = handlers[arg]
