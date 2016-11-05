@@ -33,12 +33,13 @@ def type_check(func: Callable) -> Callable:
 
     gen.write_line('def {}{}:'.format(func.__name__, str(signature)))
     with gen.indent():
-        for arg, handler in handlers.items():
-            handler(gen, arg, '`{}`'.format(arg))
+        call_args = []
         arg_prefix = {ParamKind.POSITIONAL_ONLY: '*', ParamKind.VAR_KEYWORD: '**'}
-        call_args = ', '.join(arg_prefix.get(param.kind, arg + '=') + arg
-                              for arg, param in signature.parameters.items())
-        gen.write_line('{} = {}({})'.format(return_var, func_var, call_args))
+        for arg, param in signature.parameters.items():
+            if arg in handlers:
+                handlers[arg](gen, arg, '`{}`'.format(arg))
+            call_args.append(arg_prefix.get(param.kind, arg + '=') + arg)
+        gen.write_line('{} = {}({})'.format(return_var, func_var, ', '.join(call_args)))
         return_handler(gen, return_var, 'return value')
         gen.write_line('return {}'.format(return_var))
 
