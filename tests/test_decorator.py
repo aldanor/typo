@@ -4,8 +4,10 @@ from typo.decorator import type_check
 
 
 def test_wrapper():
-    def f():
-        pass
+    T = type('T', (), {})
+
+    def f(x: int, *args, **kwargs: T) -> int:
+        "The docstring."
 
     g = type_check(f)
     for magic in ('module', 'name', 'qualname', 'doc', 'annotations'):
