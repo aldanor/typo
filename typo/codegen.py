@@ -22,6 +22,7 @@ class Codegen:
         self.next_type_id = 0
         self.types = {}
         self.typevars = sorted(typevars or [], key=str)
+        # TODO: all names injected through context should start with underscore
         self.context = {
             'collections': collections,
             'typing': typing,

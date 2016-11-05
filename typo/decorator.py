@@ -31,6 +31,7 @@ def type_check(func: Callable) -> Callable:
     signature = inspect.signature(func)
     func.__annotations__ = annotations
 
+    # TODO: proper handling of varargs / kwargs, like in mypy
     gen.write_line('def {}{}:'.format(func.__name__, str(signature)))
     with gen.indent():
         call_args = []
