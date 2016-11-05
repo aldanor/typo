@@ -11,3 +11,5 @@ def test_wrapper():
     for magic in ('module', 'name', 'qualname', 'doc', 'annotations'):
         attr = '__' + magic + '__'
         assert getattr(f, attr) == getattr(g, attr)
+
+    assert isinstance(g.wrapper_code, str)
