@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import inspect
-from inspect import _ParameterKind as ParamKind
+import functools
 
+from inspect import _ParameterKind as ParamKind
 from typing import Any, Callable
 
 from typo.codegen import Codegen
@@ -41,10 +42,9 @@ def type_check(func: Callable) -> Callable:
         return_handler(gen, return_var, 'return value')
         gen.write_line('return {}'.format(return_var))
 
-    # Compile the wrapper, reattach the docstring and type annotations.
-    wrapped = gen.compile(func.__name__)
-    wrapped.generated_code = str(gen)
-    wrapped.__annotations__ = annotations
-    wrapped.__doc__ = func.__doc__
+    # Compile the wrapper and reattach docstring, annotations, qualname, etc.
+    compiled = gen.compile(func.__name__)
+    wrapper = functools.wraps(func)(compiled)
+    wrapper.wrapper_code = str(gen)
 
-    return wrapped
+    return wrapper
