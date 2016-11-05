@@ -28,32 +28,36 @@ class HandlerMeta(abc.ABCMeta):
         super().__init__(name, bases, ns)
 
     def __call__(cls, bound: Any) -> None:
-        bound = {
-            Tuple: Tuple[Any, ...],
-            collections.Sequence: Sequence,
-            collections.MutableSequence: MutableSequence
-        }.get(bound, bound)
-
-        origin = getattr(bound, '__origin__', None)
-
-        # Note that it should be possible to resolve forward references since they
-        # store frames in which they were declared; would require a bit more work.
-        if isinstance(bound, _ForwardRef):
-            raise ValueError('forward references are not currently supported: {}'.format(bound))
-
-        if bound in (object, Any):
-            tp = AnyHandler
-        elif origin in cls.origin_handlers:
-            tp = cls.origin_handlers[origin]
-        elif bound in cls.origin_handlers:
-            tp = cls.origin_handlers[bound]
-            bound = bound[(Any,) * len(bound.__parameters__)]
-        elif type(bound) in cls.subclass_handlers:
-            tp = cls.subclass_handlers[type(bound)]
-        elif isinstance(bound, type):
-            tp = TypeHandler
+        if cls is not Handler:
+            tp = cls
         else:
-            raise TypeError('invalid type annotation: {!r}'.format(bound))
+            bound = {
+                Tuple: Tuple[Any, ...],
+                collections.Sequence: Sequence,
+                collections.MutableSequence: MutableSequence
+            }.get(bound, bound)
+
+            origin = getattr(bound, '__origin__', None)
+
+            # Note that it should be possible to resolve forward references since they
+            # store frames in which they were declared; would require a bit more work.
+            if isinstance(bound, _ForwardRef):
+                raise ValueError('forward references are not currently supported: {}'
+                                 .format(bound))
+
+            if bound in (object, Any):
+                tp = AnyHandler
+            elif origin in cls.origin_handlers:
+                tp = cls.origin_handlers[origin]
+            elif bound in cls.origin_handlers:
+                tp = cls.origin_handlers[bound]
+                bound = bound[(Any,) * len(bound.__parameters__)]
+            elif type(bound) in cls.subclass_handlers:
+                tp = cls.subclass_handlers[type(bound)]
+            elif isinstance(bound, type):
+                tp = TypeHandler
+            else:
+                raise TypeError('invalid type annotation: {!r}'.format(bound))
 
         instance = object.__new__(tp)
         instance.__init__(bound)
