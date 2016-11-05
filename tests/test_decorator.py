@@ -20,3 +20,18 @@ def test_wrapper(x: int, *args, **kwargs: type('T', (), {})) -> int:
 )
 def test_basic(x: float) -> tuple:
     return (x, x) if x else x
+
+
+@type_check_test(
+    ok=[
+        _(),
+        _(x=1),
+        _(x=1, y=2),
+    ],
+    fail=[
+        (_(x='foo'), 'invalid keyword argument `x`: expected int, got str'),
+        (_(x=1, y=2.2), 'invalid keyword argument `y`: expected int, got float')
+    ]
+)
+def test_kwargs(**kwargs: int):
+    ...
