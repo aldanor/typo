@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ('compile',)
+from typo.decorator import type_check
 
-
-def compile(bound):
-    from typo.handlers import Handler
-    return Handler(bound).compile()
+__all__ = ('type_check',)
