@@ -70,11 +70,11 @@ class Handler(metaclass=HandlerMeta):
 
     @abc.abstractmethod
     def __call__(self, gen: Codegen, varname: str, desc: Optional[str]) -> None:
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __str__(self) -> str:
-        pass
+        raise NotImplementedError
 
     @property
     def args(self) -> Tuple[Any, ...]:
