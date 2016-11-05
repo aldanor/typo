@@ -32,15 +32,15 @@ A = type('A', (P,), {})
 B = type('B', (A,), {})
 
 pytest.add_handler_test(
-    'test_user_type', A, 'test_typo.A',
+    'test_user_type', A, 'test_handlers.A',
     ok=[
         A(),
         B()
     ],
     fail=[
-        (A, 'expected test_typo.A, got type'),
-        (42, 'expected test_typo.A, got int'),
-        (P(), 'expected test_typo.A, got test_typo.P')
+        (A, 'expected test_handlers.A, got type'),
+        (42, 'expected test_handlers.A, got int'),
+        (P(), 'expected test_handlers.A, got test_handlers.P')
     ]
 )
 
@@ -218,7 +218,7 @@ pytest.add_handler_test(
     ],
     fail=[
         (42, 'expected mutable sequence, got int'),
-        (MySequence(), 'expected mutable sequence, got test_typo.MySequence'),
+        (MySequence(), 'expected mutable sequence, got test_handlers.MySequence'),
         ([1, '2'], 'invalid item #1.*expected int, got str')
     ]
 )
@@ -234,7 +234,7 @@ pytest.add_handler_test(
     ],
     fail=[
         (42, 'expected mutable sequence, got int'),
-        (MySequence(), 'expected mutable sequence, got test_typo.MySequence')
+        (MySequence(), 'expected mutable sequence, got test_handlers.MySequence')
     ]
 )
 
@@ -307,9 +307,9 @@ pytest.add_handler_test(
         ((1, {2: '3'}), 'invalid value at 2 of item #1.*cannot assign str to T'),
         ((1, OrderedDict([('a', 1), (2, 3)])), 'key.*cannot assign int to U'),
         ((1, OrderedDict([(Int(2), 3), (4, 5)])), 'key.*cannot assign int to U'),
-        ((1, OrderedDict([(2, 3), (Int(4), 5)])), 'key.*cannot assign test_typo.Int to U'),
+        ((1, OrderedDict([(2, 3), (Int(4), 5)])), 'key.*cannot assign test_handlers.Int to U'),
         ((Int(1), {'a': 2}), 'invalid value.*cannot assign int to T'),
-        ((1, {'a': Int(2)}), 'invalid value.*cannot assign test_typo.Int to T')
+        ((1, {'a': Int(2)}), 'invalid value.*cannot assign test_handlers.Int to T')
     ]
 )
 
@@ -326,7 +326,7 @@ pytest.add_handler_test(
         ('foo', 'expected list, got str'),
         (['a'], r'cannot assign str to V'),
         ([1, 'a'], r'cannot assign str to V'),
-        ([1, Int(2)], r'cannot assign test_typo.Int to V'),
+        ([1, Int(2)], r'cannot assign test_handlers.Int to V'),
         ([Int(1), 2], r'cannot assign int to V')
     ]
 )
@@ -343,7 +343,7 @@ pytest.add_handler_test(
         (('a', 'b'), 'cannot assign str to W'),
         ((1, 2.2), 'cannot assign float to W'),
         ((1.1, 2), 'cannot assign int to W'),
-        ((Int(1), Int(1)), 'cannot assign test_typo.Int to W')
+        ((Int(1), Int(1)), 'cannot assign test_handlers.Int to W')
     ]
 )
 
