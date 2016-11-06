@@ -35,3 +35,17 @@ def test_basic(x: float) -> tuple:
 )
 def test_kwargs(**kwargs: int):
     ...
+
+@type_check_test(
+    ok=[
+        _(),
+        _(1),
+        _(1, 2)
+    ],
+    fail=[
+        (_('a'), r'invalid item #0 of `\*args`: expected int, got str'),
+        (_(1, 'a'), r'invalid item #1 of `\*args`: expected int, got str')
+    ]
+)
+def test_varargs(*args: int):
+    ...
