@@ -24,11 +24,15 @@ If the value types are not consistent with the function signature, a
 
 ```python
 >>> f(1, (0, 2.2))
+```
+
+```
 TypeError: invalid item #1 of `s`: expected int, got float
 ```
 
 *Note:* this is work-in-progress and not all `typing` primitives are
-supported; however all supported constructs s
+supported; however all supported constructs should be covered by a
+good number of tests.
 
 Here's some of the supported type hints: simple types, `List`, `Dict`,
 `Tuple`, `Sequence`, `Set`, `TypeVar` (with support for constraints 
