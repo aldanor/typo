@@ -86,7 +86,7 @@ def type_check(func: Callable) -> Callable:
                 handler = handlers[arg]
                 var_desc = {
                     KeywordArgsHandler: 'keyword arguments',
-                    PositionalArgsHandler: 'positional arguments'
+                    PositionalArgsHandler: '`*{}`'.format(arg)
                 }.get(type(handler), '`{}`'.format(arg))
                 handler(gen, arg, var_desc)
 
