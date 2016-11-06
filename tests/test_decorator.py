@@ -49,3 +49,19 @@ def test_kwargs(**kwargs: int):
 )
 def test_varargs(*args: int):
     ...
+
+@type_check_test(
+    ok=[
+        _(1),
+        _(1, b='a'),
+        _(1, c=1.1, d=1.2),
+        _(1, b='a', c=1.1, d=1.2)
+    ],
+    fail=[
+        (_('a'), 'invalid `a`: expected int, got str'),
+        (_(1, b=1), 'invalid `b`: expected str, got int'),
+        (_(1, c=1.1, d='a'), 'keyword argument `d`: expected float, got str'),
+    ]
+)
+def test_mixed_args(a: int, *, b: str = 'foo', **kwargs: float):
+    ...
