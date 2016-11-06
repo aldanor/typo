@@ -20,11 +20,15 @@ arguments will have their types checked before the function is executed;
 return value can be optionally checked as well. 
 
 If the value types are not consistent with the function signature, a 
-`TypeError` with a descriptive error message will be raised:
+`TypeError` with a descriptive error message will be raised. For
+instance, calling function `f` from the example above with wrong 
+argument types,
 
 ```python
 >>> f(1, (0, 2.2))
 ```
+
+results in an exception being thrown:
 
 ```
 TypeError: invalid item #1 of `s`: expected int, got float
