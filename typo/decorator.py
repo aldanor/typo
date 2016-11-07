@@ -70,7 +70,7 @@ def type_check(func: Callable) -> Callable:
 
     # Store the function itself in the codegen context (wrapper closure).
     gen = Codegen(typevars=typevars)
-    return_var, func_var = gen.new_vars(2)
+    func_var, return_var = gen.new_vars(2)
     gen.context[func_var] = func
 
     # Generate code for the function body.
@@ -92,12 +92,14 @@ def type_check(func: Callable) -> Callable:
                     handler(gen, arg, var_desc)
 
         # Call the function and remember the return value.
-        gen.write_line('{} = {}({})'.format(return_var, func_var, ', '.join(call_args)))
-
-        # Optionally, check the return value type before returning.
+        # Optionally, also check the return value type before returning.
+        func_call = '{}({})'.format(func_var, ', '.join(call_args))
         if not return_handler.is_any:
+            gen.write_line('{} = {}'.format(return_var, func_call))
             return_handler(gen, return_var, 'return value')
-        gen.write_line('return {}'.format(return_var))
+            gen.write_line('return {}'.format(return_var))
+        else:
+            gen.write_line('return {}'.format(func_call))
 
     # Compile the wrapper and reattach docstring, annotations, qualname, etc.
     compiled = gen.compile(func.__name__)
